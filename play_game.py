@@ -4,6 +4,7 @@ from solver import SudokuSolver
 
 
 CHOOSE_LEVEL_MESSAGE = """
+Welcome to Michael's Sudoku! Hope you have a great time playing!
 Please, choose the level you want. 
 Type '0' for 'Easy', '1' for 'Medium' or '2' for 'Hard':"""
 
@@ -37,16 +38,21 @@ class GenerateSudoku(SudokuSolver):
         self.puzzle[0][0] = randint(1, 9)
         self.solveSudoku(True)
 
-        # Levels are: 0 for easy
-        #             1 for medium
-        #             2 for hard
         self.levels = {'0': 'Easy',
                        '1': 'Medium',
                        '2': 'Hard'}
+        # self.clues has the sense of ['Easy','Medium','Hard']
         self.clues = [randint(74, 78), randint(
             30, 35), randint(23, 29)]  # randint(36, 42) randint(74, 78)
+        
+        # Used to decide which cells get set to empty before the game starts.
+        # Shuffled to make it a random choice.
         self.indices = [(i, j) for i in range(9) for j in range(9)]
         shuffle(self.indices)
+
+        # Moves made will be placed here. Needed for when the player
+        # needs to undo their last move when they no longer have a
+        # legal move for some cell.
         self.moves_stack = []
         super().__init__(self.puzzle)
 
@@ -54,15 +60,32 @@ class GenerateSudoku(SudokuSolver):
         return self.puzzle
 
     def _set_board(self):
+        """
+        Used to prepare the board for the game.
+        Called only once per session by the playGame function.
+        Depending on the difficulty level chosen by the player,
+        we set a random number of cells in the board to be
+        empty. These are the cells the player needs to fill
+        correctly to complete the game.
+
+        Note that we do not force the player to find the solution
+        we found when generating the board. All that's important
+        is that they find a valid solution for the board we
+        present to them.
+        """
         game_level = self.chooseLevel()
         level = 81 - self.clues[int(game_level)]
         self.indices = self.indices[:level]
         for r, c in self.indices:
             self.puzzle[r][c] = 0
-        # self._print_sudoku([['*' if num == 0 else num for num in row]
-        #                    for row in self.puzzle])
 
-    def chooseLevel(self):
+    def chooseLevel(self) -> str:
+        """
+        Prompt for the player to choose the level
+        of difficulty they want.
+        It also displays a welcome message.
+        Called only once per session by the _set_board function.
+        """
         print(CHOOSE_LEVEL_MESSAGE)
         while True:
             try:

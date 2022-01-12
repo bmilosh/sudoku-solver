@@ -325,7 +325,7 @@ class GenerateSudoku(SudokuSolver):
         self.levels = {'0': 'Easy',
                        '1': 'Medium',
                        '2': 'Hard'}
-        self.clues = [randint(36, 42), randint(30, 35), randint(23, 29)]
+        self.clues = [randint(74, 78), randint(30, 35), randint(23, 29)]  # randint(36, 42)
         self.indices = [(i, j) for i in range(9) for j in range(9)]
         shuffle(self.indices)
         self.row_ids = ['a','b','c','d','e','f','g','h','i']
@@ -333,11 +333,16 @@ class GenerateSudoku(SudokuSolver):
     def generateSudoku(self) -> list[list]:
         return self.puzzle
 
-    def _set_board(self, choice: int):
-        level = 81 - self.clues[choice]
-        for i in range(level):
-            r, c = self.indices[i]
+    def _set_board(self):
+        game_level = self.chooseLevel()
+        level = 81 - self.clues[int(game_level)]
+        self.indices = self.indices[:level]
+        # for i in range(level):
+        #     r, c = self.indices[i]
+        for r, c in self.indices:
             self.puzzle[r][c] = 0
+        self._print_sudoku([['*' if num == 0 else num for num in row]
+                           for row in self.puzzle])
 
     def chooseLevel(self):
         print(CHOOSE_LEVEL_MESSAGE)
@@ -355,21 +360,35 @@ class GenerateSudoku(SudokuSolver):
                 break
         return level_id
 
-    def playGame(self):
-        game_level = self.chooseLevel()
-        self._set_board(int(game_level))
-        # self.printSudoku(True)
-        self._print_sudoku([['*' if num == 0 else num for num in row]
-                           for row in self.puzzle])
+    def _undo_move(self, move_list: list):
+        print(f"Your last move '{move_list[-1]}' has been undone.")
+        move = move_list[-1]
+        row_and_col = move.split('=')[0]
+        row = self.row_ids[int(row_and_col[0].strip())]
+        col = int(row_and_col[1].strip()) - 1
+        self.puzzle[row][col] = 0
+        _ = move_list.pop()
 
-        moves_stack = []
+    def _check_legal_moves(self, row: int, col: int, value: int) -> bool:
+        grid = [self.puzzle[row - row % 3 + i][col - col % 3 + j]
+                for i in range(3)
+                for j in range(3)]
+
+        not_in = [j for j in range(1, 10)
+                if not j in self.puzzle[row] and
+                j not in [self.puzzle[k][col] for k in range(9)] and
+                j not in grid]
+        return not not not_in, value in not_in
+
+    def _playerMove(self):
         print("Please, enter a cell, followed by the equals sign and a value: (e.g. 'a5 = 8')")
         while True:
             try:
-                cell, value = input().strip().split('=')
+                response = input().strip()
+                cell, value = response.split('=')
                 cell = cell.strip()
                 row = self.row_ids.index(cell[0])
-            except (KeyError, ValueError, IndexError):
+            except (ValueError, IndexError):
                 print("Please, enter a valid cell.")
             except KeyboardInterrupt:
                 print("You have chosen to end the game. Goodbye.")
@@ -378,35 +397,107 @@ class GenerateSudoku(SudokuSolver):
                 try:
                     value = int(value.strip())
                     col = int(cell[1:])
-                except ValueError:
+                except (ValueError, IndexError):
                     print("Column and value should be integers between 1 and 9 inclusive.")
                     print("Please, enter a cell, followed by the equals sign and a value: (e.g. 'a5 = 8')")
-                    continue
-                if value not in range(1, 10) or col not in range(1, 10):
-                    print("Please enter a valid column and value. Both should be integers between 1 and 9 inclusive.")
                 else:
-                    col = col - 1
-                    if self.puzzle[row][col] != 0:
-                        print("Sorry, but that spot is taken. Please, enter an empty cell.")
-                        continue
-                    grid = [self.puzzle[row - row % 3 + i][col - col % 3 + j]
-                            for i in range(3)
-                            for j in range(3)]
+                    if value not in range(1, 10) or col not in range(1, 10):
+                        print("Please enter a valid column and value. Both should be integers between 1 and 9 inclusive.")
+                    else:
+                        col = col - 1
+                        if self.puzzle[row][col] != 0:
+                            print("Sorry, but that spot is taken. Please, enter an empty cell.")
+                            continue
+                        has_legal_moves, is_legal = self._check_legal_moves(row, col, value)
 
-                    # A list of possible values for this position.
-                    # We generate this list by eliminating all numbers in the range(1, 10)
-                    # currently in
-                    #   - the 3 x 3 grid,
-                    #   - the row containing this cell, and
-                    #   - the column containing this cell.
-                    not_in = [j for j in range(1, 10)
-                            if not j in self.puzzle[row] and
-                            j not in [self.puzzle[k][col] for k in range(9)] and
-                            j not in grid]
-                    if not not_in:
-                        print("There are no possible values for this cell. You need to backtrack.")
-                break
-            break
+                    return row, col, value, response
+
+    def playGame(self):
+        # game_level = self.chooseLevel()
+        # self._set_board(int(game_level))
+        # # self.printSudoku(True)
+        # self._print_sudoku([['*' if num == 0 else num for num in row]
+        #                    for row in self.puzzle])
+
+        self._set_board()
+
+        moves_stack = []
+        print(len(self.indices))
+        # print("Please, enter a cell, followed by the equals sign and a value: (e.g. 'a5 = 8')")
+        while True:
+            print(moves_stack)
+            if not self.indices:
+                print("Congratulations! Sudoku solved!")
+                self.printSudoku(True)
+                exit()
+            self._print_sudoku([['*' if num == 0 else num for num in row]
+                               for row in self.puzzle])
+            row, col, value, move = self._playerMove()
+            if value not in range(1, 10) or col not in range(1, 10):
+                print("Please enter a valid column and value. Both should be integers between 1 and 9 inclusive.")
+            else:
+                col = col - 1
+                # if self.puzzle[row][col] != 0:
+                #     print("Sorry, but that spot is taken. Please, enter an empty cell.")
+                #     continue
+                 
+                grid = [self.puzzle[row - row % 3 + i][col - col % 3 + j]
+                        for i in range(3)
+                        for j in range(3)]
+
+                not_in = [j for j in range(1, 10)
+                        if not j in self.puzzle[row] and
+                        j not in [self.puzzle[k][col] for k in range(9)] and
+                        j not in grid]
+                if not not_in:
+                    print("There are no legal values for this cell. You need to backtrack.")
+                    self._undo_move(moves_stack)
+                else:
+                    moves_stack.append(move)
+                    self.puzzle[row][col] = value
+                    self.indices.remove((row, col))
+            # try:
+            #     cell, value = input().strip().split('=')
+            #     cell = cell.strip()
+            #     row = self.row_ids.index(cell[0])
+            # except (KeyError, ValueError, IndexError):
+            #     print("Please, enter a valid cell.")
+            # except KeyboardInterrupt:
+            #     print("You have chosen to end the game. Goodbye.")
+            #     quit()
+            # else:
+            #     try:
+            #         value = int(value.strip())
+            #         col = int(cell[1:])
+            #     except ValueError:
+            #         print("Column and value should be integers between 1 and 9 inclusive.")
+            #         print("Please, enter a cell, followed by the equals sign and a value: (e.g. 'a5 = 8')")
+            #         continue
+            #     if value not in range(1, 10) or col not in range(1, 10):
+            #         print("Please enter a valid column and value. Both should be integers between 1 and 9 inclusive.")
+            #     else:
+            #         col = col - 1
+            #         if self.puzzle[row][col] != 0:
+            #             print("Sorry, but that spot is taken. Please, enter an empty cell.")
+            #             continue
+            #         grid = [self.puzzle[row - row % 3 + i][col - col % 3 + j]
+            #                 for i in range(3)
+            #                 for j in range(3)]
+
+            #         # A list of possible values for this position.
+            #         # We generate this list by eliminating all numbers in the range(1, 10)
+            #         # currently in
+            #         #   - the 3 x 3 grid,
+            #         #   - the row containing this cell, and
+            #         #   - the column containing this cell.
+            #         not_in = [j for j in range(1, 10)
+            #                 if not j in self.puzzle[row] and
+            #                 j not in [self.puzzle[k][col] for k in range(9)] and
+            #                 j not in grid]
+            #         if not not_in:
+            #             print("There are no possible values for this cell. You need to backtrack.")
+            #     break
+            # break
         
 
 

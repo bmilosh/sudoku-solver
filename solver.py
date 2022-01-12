@@ -440,7 +440,7 @@ class GenerateSudoku(SudokuSolver):
                 # if self.puzzle[row][col] != 0:
                 #     print("Sorry, but that spot is taken. Please, enter an empty cell.")
                 #     continue
-                 
+                has_legal_moves, is_legal = self._check_legal_moves(row, col, value)
                 grid = [self.puzzle[row - row % 3 + i][col - col % 3 + j]
                         for i in range(3)
                         for j in range(3)]

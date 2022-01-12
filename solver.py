@@ -1,4 +1,6 @@
 
+from random import randint, shuffle
+import time
 
 PUZZLE_NOT_SOLVABLE = """
 Could not solve puzzle! Please, check that enough clues are given,
@@ -22,6 +24,14 @@ class SudokuSolver:
             self.puzzle = list(puzzle)
         else:
             self.puzzle = puzzle
+
+    def printSudoku(self, generate=False):
+        if generate:
+            if self.isValidSudoku():
+                self._print_sudoku(self.puzzle)
+            else:
+                return None
+        return None
 
     def _print_sudoku(self, puzzle: list[list]) -> None:
         """
@@ -58,7 +68,7 @@ class SudokuSolver:
         Returns a boolean indicating whether or not the content is of the
         right type.
         """
-        
+
         desired_type, acceptable_type = type_tuple
         puzzle_item = self.puzzle[idx1] if idx2 is None else self.puzzle[idx1][idx2]
         if not isinstance(puzzle_item, desired_type):
@@ -129,7 +139,7 @@ class SudokuSolver:
         # All checks are fine.
         return True
 
-    def solveSudoku(self):
+    def solveSudoku(self, generate=False):
         """
         Main function.
         Takes as input, a 9 x 9 sudoku represented
@@ -144,6 +154,11 @@ class SudokuSolver:
         In the case where the puzzle was found to be invalid
         due to type inconsistencies, it returns None.
         """
+
+        if generate:
+            self.recursiveSolveSudoku([(i, j) for i in range(9) for j in range(9)
+                                        if self.puzzle[i][j] == 0])
+            return None
 
         # We do a validity check on the puzzle.
         if not self.isValidSudoku():
@@ -224,8 +239,10 @@ class SudokuSolver:
         #   - the column containing this cell.
         not_in = [j for j in range(1, 10)
                   if not j in self.puzzle[row] and
-                  not j in [self.puzzle[k][col] for k in range(9)] and
-                  not j in grid]
+                  j not in [self.puzzle[k][col] for k in range(9)] and
+                  j not in grid]
+        
+        shuffle(not_in)
 
         ind = 0
         while ind < len(not_in):
@@ -260,31 +277,192 @@ class SudokuSolver:
         return False
 
 
+# class GenerateSudoku:
+#     def __init__(self) -> None:
+#         self.puzzle = [[0] * 9 for _ in range(9)]
+#         self.puzzle[0][0] = randint(1, 9)
+
+#     def generateSudoku(self) -> list[list]:
+#         solver_instance = SudokuSolver(self.puzzle)
+#         solver_instance.solveSudoku(True)
+#         solver_instance.printSudoku(True)
+#         return self.puzzle
+
+
+# class PlayGame:
+#     def __init__(self) -> None:
+#         self.indices = [(i, j) for i in range(9) for j in range(9)]
+#         shuffle(self.indices)
+#         self.puzzle = GenerateSudoku().generateSudoku()
+#         # Levels are: 0 for easy
+#         #             1 for medium
+#         #             2 for hard
+#         self.levels = {0: randint(36, 42),
+#                         1: randint(30, 35),
+#                         2: randint(23, 29)}
+
+#     def gameLevel(self, choice: int):
+#         level = 81 - self.levels[choice]
+#         for i in range(level):
+#             r, c = self.indices[i]
+#             self.puzzle[r][c] = 0
+
+CHOOSE_LEVEL_MESSAGE = """
+Please, choose the level you want. 
+Type '0' for 'Easy', '1' for 'Medium' or '2' for 'Hard':"""
+
+class GenerateSudoku(SudokuSolver):
+    def __init__(self) -> None:
+        self.puzzle = [[0] * 9 for _ in range(9)]
+        self.puzzle[0][0] = randint(1, 9)
+        # self.solver_instance = SudokuSolver(self.puzzle)
+        # self.solver_instance.solveSudoku(True)
+        self.solveSudoku(True)
+
+        # Levels are: 0 for easy
+        #             1 for medium
+        #             2 for hard
+        self.levels = {'0': 'Easy',
+                       '1': 'Medium',
+                       '2': 'Hard'}
+        self.clues = [randint(36, 42), randint(30, 35), randint(23, 29)]
+        self.indices = [(i, j) for i in range(9) for j in range(9)]
+        shuffle(self.indices)
+        self.row_ids = ['a','b','c','d','e','f','g','h','i']
+
+    def generateSudoku(self) -> list[list]:
+        return self.puzzle
+
+    def _set_board(self, choice: int):
+        level = 81 - self.clues[choice]
+        for i in range(level):
+            r, c = self.indices[i]
+            self.puzzle[r][c] = 0
+
+    def chooseLevel(self):
+        print(CHOOSE_LEVEL_MESSAGE)
+        while True:
+            try:
+                level_id = input().strip()
+                game_level = self.levels[level_id]
+            except KeyError:
+                print("You should type '0' for 'Easy', '1' for 'Medium' or '2' for 'Hard'.")
+            except KeyboardInterrupt:
+                print("You have chosen to end the game. Goodbye.")
+                quit()
+            else:
+                print(f"Your chosen level: {game_level}.")
+                break
+        return level_id
+
+    def playGame(self):
+        game_level = self.chooseLevel()
+        self._set_board(int(game_level))
+        # self.printSudoku(True)
+        self._print_sudoku([['*' if num == 0 else num for num in row]
+                           for row in self.puzzle])
+
+        moves_stack = []
+        print("Please, enter a cell, followed by the equals sign and a value: (e.g. 'a5 = 8')")
+        while True:
+            try:
+                cell, value = input().strip().split('=')
+                cell = cell.strip()
+                row = self.row_ids.index(cell[0])
+            except (KeyError, ValueError, IndexError):
+                print("Please, enter a valid cell.")
+            except KeyboardInterrupt:
+                print("You have chosen to end the game. Goodbye.")
+                quit()
+            else:
+                try:
+                    value = int(value.strip())
+                    col = int(cell[1:])
+                except ValueError:
+                    print("Column and value should be integers between 1 and 9 inclusive.")
+                    print("Please, enter a cell, followed by the equals sign and a value: (e.g. 'a5 = 8')")
+                    continue
+                if value not in range(1, 10) or col not in range(1, 10):
+                    print("Please enter a valid column and value. Both should be integers between 1 and 9 inclusive.")
+                else:
+                    col = col - 1
+                    if self.puzzle[row][col] != 0:
+                        print("Sorry, but that spot is taken. Please, enter an empty cell.")
+                        continue
+                    grid = [self.puzzle[row - row % 3 + i][col - col % 3 + j]
+                            for i in range(3)
+                            for j in range(3)]
+
+                    # A list of possible values for this position.
+                    # We generate this list by eliminating all numbers in the range(1, 10)
+                    # currently in
+                    #   - the 3 x 3 grid,
+                    #   - the row containing this cell, and
+                    #   - the column containing this cell.
+                    not_in = [j for j in range(1, 10)
+                            if not j in self.puzzle[row] and
+                            j not in [self.puzzle[k][col] for k in range(9)] and
+                            j not in grid]
+                    if not not_in:
+                        print("There are no possible values for this cell. You need to backtrack.")
+                break
+            break
+        
+
+
+# class PlayGame:
+#     def __init__(self) -> None:
+#         self.puzzle = GenerateSudoku().generateSudoku()
+
+
+
+
+# for easy: do 81 - randint(36, 41) to get number of empty cells
+# for medium: do 81 - randint(30, 35) to get number of empty cells
+# for hard: do 81 - randint(23, 29) to get number of empty cells
+
 if __name__ == '__main__':
     # More example sudokus can be found in test_solver.py
 
     # Valid and solvable.
-    solvable_puzzle1 = (
-        (0, 0, 6, '0', 0, 7, 3, 0, 0),
-        [0, 0, 1, 0, 0, 0, 0, 4, 0],
-        [0, 0, 0, 4, 2, 0, 0, 5, 0],
-        [0, 7, 0, 9, 0, 5, 0, 0, 0],
-        [0, 2, 5, 6, 0, 0, 0, 0, 0],
-        [9, 0, 0, 0, 0, 0, 8, 0, 0],
-        [0, 8, 0, 0, 0, 4, 0, 3, 0],
-        [7, 0, 0, 0, 9, 0, 0, 6, 0],
-        [0, 0, 0, '3', 0, 2, 4, 0, 0]
-    )
+    # solvable_puzzle1 = (
+    #     (0, 0, 6, '0', 0, 7, 3, 0, 0),
+    #     [0, 0, 1, 0, 0, 0, 0, 4, 0],
+    #     [0, 0, 0, 4, 2, 0, 0, 5, 0],
+    #     [0, 7, 0, 9, 0, 5, 0, 0, 0],
+    #     [0, 2, 5, 6, 0, 0, 0, 0, 0],
+    #     [9, 0, 0, 0, 0, 0, 8, 0, 0],
+    #     [0, 8, 0, 0, 0, 4, 0, 3, 0],
+    #     [7, 0, 0, 0, 9, 0, 0, 6, 0],
+    #     [0, 0, 0, '3', 0, 2, 4, 0, 0]
+    # )
 
-    import time
-    start = time.perf_counter()
-    sudoku = SudokuSolver(solvable_puzzle1)
-    solved_sudoku = sudoku.solveSudoku()
-    end = time.perf_counter()
+    # solvable_puzzle4 = [
+    #     [0, 0, 0, 8, 0, 1, 0, 0, 0],
+    #     [0, 0, 0, 0, 0, 0, 4, 3, 0],
+    #     [5, 0, 0, 0, 0, 0, 0, 0, 0],
+    #     [0, 0, 0, 0, 7, 0, 8, 0, 0],
+    #     [0, 0, 0, 0, 0, 0, 1, 0, 0],
+    #     [0, 2, 0, 0, 3, 0, 0, 0, 0],
+    #     [6, 0, 0, 0, 0, 0, 0, 7, 5],
+    #     [0, 0, 3, 4, 0, 0, 0, 0, 0],
+    #     [0, 0, 0, 2, 0, 0, 6, 0, 0]
+    # ]
 
-    if solved_sudoku:
-        print()
-        print(f"It took {round(end - start, 3)}s to solve this puzzle.")
-    elif solved_sudoku == False:
-        print(
-            f"It took {round(end - start, 3)}s to determine there's no solution for this puzzle.")
+    # # import time
+    # start = time.perf_counter()
+    # sudoku = SudokuSolver(solvable_puzzle4)
+    # solved_sudoku = sudoku.solveSudoku()
+    # end = time.perf_counter()
+
+    # if solved_sudoku:
+    #     print()
+    #     print(f"It took {round(end - start, 3)}s to solve this puzzle.")
+    # elif solved_sudoku == False:
+    #     print(
+    #         f"It took {round(end - start, 3)}s to determine there's no solution for this puzzle.")
+
+    test_pez = GenerateSudoku()
+    test_pez.playGame()
+    # test_pez.generateSudoku()
+

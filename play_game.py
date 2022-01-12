@@ -102,15 +102,40 @@ class GenerateSudoku(SudokuSolver):
         return level_id
 
     def _undo_last_move(self):
+        """
+        Undoes the last move made by the player.
+        Called automatically when the player chooses
+        a cell for which they no longer have legal
+        moves. Can also be called by the player to
+        undo a move (they do this by typing 'u').
+
+        It takes for granted that it'll only be called
+        when there's in fact a move to undo, so no checks
+        are made here.
+        """
         print(f"Your last move '{self.moves_stack[-1]}' has been undone.")
         move = self.moves_stack.pop()
         row_and_col, _ = move.split('=')
         row = self.row_ids.index(row_and_col[0].strip().lower())
         col = int(row_and_col[1].strip()) - 1
         self.puzzle[row][col] = 0
+        # We add the cell index back to the list of empty cells.
         self.indices.append((row, col))
 
     def _check_legal_moves(self, row: int, col: int, value: int) -> bool:
+        """
+        Used to verify the validity of a move.
+        Called by the _player_move function.
+        
+        Takes as input:
+            - row -> row index of the cell
+            - column -> column index of the cell
+            - value -> player's choice to fill the cell
+        
+        Returns two booleans. One indicating if there are
+        legal moves for the chosen cell, and another if the
+        proposed value is legal for the cell.
+        """
         grid = [self.puzzle[row - row % 3 + i][col - col % 3 + j]
                 for i in range(3)
                 for j in range(3)]
@@ -121,10 +146,18 @@ class GenerateSudoku(SudokuSolver):
                   j not in grid]
         return not not not_in, value in not_in
 
-    def _check_valid_sudoku(self):
+    def _check_valid_sudoku(self) -> bool:
+        """
+        Used to confirm that the player has correctly
+        solved the sudoku.
+        Called by the playGame function when there
+        are no more empty cells.
+        Returns boolean indicating whether or not sudoku
+        has been correctly solved.
+        """
         return all(len(row) == len(set(row)) for row in self.puzzle)
 
-    def _playerMove(self):
+    def _player_move(self):
         print(CHOOSE_CELL_MESSAGE)
         # print(ROW_AND_COLUMN_ID_MESSAGE)
         if self.moves_stack:
@@ -196,7 +229,7 @@ class GenerateSudoku(SudokuSolver):
             if not last_move_legal:
                 print("Your previous move was undone.")
             try:
-                row, col, value, move = self._playerMove()
+                row, col, value, move = self._player_move()
             except TypeError:
                 if not self.moves_stack:
                     last_move_legal = True

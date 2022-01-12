@@ -11,13 +11,15 @@ REMIND_PLAYER_OF_LEVEL_OPTIONS = """
 You should type '0' for 'Easy', '1' for 'Medium' or '2' for 'Hard'."""
 
 CHOOSE_CELL_MESSAGE = """
-Please, enter a cell, followed by the equals sign and a value (e.g. 'a5 = 8') and press 'enter'"""
+Please, enter a cell followed by the equals sign and a value (e.g. 'a5 = 8') and press 'enter'.
+Empty cells are shown with an '*'.
+Rows are labelled downward from 'a' to 'i' and columns are labelled rightward from 1 to 9"""
 
 ROW_AND_COLUMN_ID_MESSAGE = """
 Rows are labelled downward from 'a' to 'i' and columns are labelled rightward from 1 to 9"""
 
 COLUMN_OR_VALUE_OUT_OF_RANGE = """
-Please enter a valid column and value. Both should be integers between 1 and 9 inclusive."""
+Please, enter a valid column and value. Both should be integers between 1 and 9 inclusive."""
 
 SPOT_TAKEN_MESSAGE = """
 Sorry, but that spot is taken. Please, enter a value for an empty cell."""
@@ -42,7 +44,7 @@ class GenerateSudoku(SudokuSolver):
                        '1': 'Medium',
                        '2': 'Hard'}
         self.clues = [randint(74, 78), randint(
-            30, 35), randint(23, 29)]  # randint(36, 42)
+            30, 35), randint(23, 29)]  # randint(36, 42) randint(74, 78)
         self.indices = [(i, j) for i in range(9) for j in range(9)]
         shuffle(self.indices)
         self.moves_stack = []
@@ -101,7 +103,7 @@ class GenerateSudoku(SudokuSolver):
 
     def _playerMove(self):
         print(CHOOSE_CELL_MESSAGE)
-        print(ROW_AND_COLUMN_ID_MESSAGE)
+        # print(ROW_AND_COLUMN_ID_MESSAGE)
         if self.moves_stack:
             print("You can type 'u' to undo your last move.")
         while True:
@@ -134,6 +136,7 @@ class GenerateSudoku(SudokuSolver):
                             continue
                         has_legal_moves, is_legal = self._check_legal_moves(
                             row, col, value)
+
                         if not has_legal_moves:
                             print(NO_LEGAL_MOVES)
                             return False
@@ -148,13 +151,21 @@ class GenerateSudoku(SudokuSolver):
         print(len(self.indices))
         last_move_legal = True
         show_board = True
+        start = time.perf_counter()
         while True:
             print(self.moves_stack)
             if not self.indices:
                 is_complete = self._check_valid_sudoku()
                 if is_complete:
+                    end = time.perf_counter()
                     self.printSudoku(True)
                     print("Congratulations! Sudoku solved!")
+                    time_in_seconds = str(round(end - start, 2))
+                    split_time = time_in_seconds.split('.')
+                    if (m := int(split_time[0])) < 60:
+                        print(f"Time spent: {''.join(split_time)}s")
+                    else:
+                        print(f"Time spent: {round(m / 60, 2)} minutes")
                     exit()
             if show_board:
                 self._print_sudoku([['*' if num == 0 else num for num in row]

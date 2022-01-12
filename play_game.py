@@ -45,8 +45,8 @@ class GenerateSudoku(SudokuSolver):
             30, 35), randint(23, 29)]  # randint(36, 42)
         self.indices = [(i, j) for i in range(9) for j in range(9)]
         shuffle(self.indices)
-        self.row_ids = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
         self.moves_stack = []
+        super().__init__(self.puzzle)
 
     def generateSudoku(self) -> list[list]:
         return self.puzzle
@@ -57,8 +57,8 @@ class GenerateSudoku(SudokuSolver):
         self.indices = self.indices[:level]
         for r, c in self.indices:
             self.puzzle[r][c] = 0
-        self._print_sudoku([['*' if num == 0 else num for num in row]
-                           for row in self.puzzle])
+        # self._print_sudoku([['*' if num == 0 else num for num in row]
+        #                    for row in self.puzzle])
 
     def chooseLevel(self):
         print(CHOOSE_LEVEL_MESSAGE)
@@ -91,7 +91,7 @@ class GenerateSudoku(SudokuSolver):
                 for j in range(3)]
 
         not_in = [j for j in range(1, 10)
-                  if not j in self.puzzle[row] and
+                  if j not in self.puzzle[row] and
                   j not in [self.puzzle[k][col] for k in range(9)] and
                   j not in grid]
         return not not not_in, value in not_in
@@ -138,7 +138,7 @@ class GenerateSudoku(SudokuSolver):
                             print(NO_LEGAL_MOVES)
                             return False
                         elif not is_legal:
-                            print(str(value) + NOT_LEGAL_VALUE)
+                            print(str(value) + ' ' + NOT_LEGAL_VALUE.strip())
                         else:
                             return row, col, value, response
 
@@ -147,6 +147,7 @@ class GenerateSudoku(SudokuSolver):
 
         print(len(self.indices))
         last_move_legal = True
+        show_board = True
         while True:
             print(self.moves_stack)
             if not self.indices:
@@ -155,8 +156,9 @@ class GenerateSudoku(SudokuSolver):
                     self.printSudoku(True)
                     print("Congratulations! Sudoku solved!")
                     exit()
-            self._print_sudoku([['*' if num == 0 else num for num in row]
-                               for row in self.puzzle])
+            if show_board:
+                self._print_sudoku([['*' if num == 0 else num for num in row]
+                                for row in self.puzzle])
             if not last_move_legal:
                 print("Your previous move was undone.")
             try:
@@ -164,17 +166,20 @@ class GenerateSudoku(SudokuSolver):
             except TypeError:
                 if not self.moves_stack:
                     last_move_legal = True
+                    show_board = False
                     print("You have no moves to undo.")
                     continue
                 last_move_legal = False
+                show_board = True
                 self._undo_last_move()
             else:
                 last_move_legal = True
+                show_board = True
                 self.moves_stack.append(move)
                 self.puzzle[row][col] = value
                 self.indices.remove((row, col))
 
 
 if __name__ == '__main__':
-    test_pez = GenerateSudoku()
-    test_pez.playGame()
+    we_play = GenerateSudoku()
+    we_play.playGame()

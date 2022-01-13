@@ -19,11 +19,12 @@ class SudokuSolver:
     A sudoku solver.
     """
 
-    def __init__(self, puzzle: list[list]) -> None:
-        if isinstance(puzzle, tuple):
-            self.puzzle = list(puzzle)
-        else:
-            self.puzzle = puzzle
+    def __init__(self, puzzle=None) -> None:
+        if puzzle:
+            if isinstance(puzzle, tuple):
+                self.puzzle = list(puzzle)
+            else:
+                self.puzzle = puzzle
         self.row_ids = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
 
     def printSudoku(self, generate=False):

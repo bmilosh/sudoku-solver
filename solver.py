@@ -10,7 +10,9 @@ in grids, rows, or columns.
 NOT_ENOUGH_CLUES = """
 You have provided fewer than 17 clues. Note that, while this puzzle
 might still be solvable, the solution may not be unique. To have a
-unique solution, you need to provide at least 17 correct clues.
+unique solution, you need to provide at least 17 correct clues 
+(which unfortunately also doesn't guarantee uniqueness, but is
+necessary).
 """
 
 
@@ -40,6 +42,8 @@ class SudokuSolver:
         Helper function to print the sudoku.
         Called by the solveSudoku function.
         """
+        print()
+        print("   1  2  3     4  5  6     7  8  9")
         print()
         for idx, row in enumerate(puzzle):
             toprint = f" {row[0]}  {row[1]}  {row[2]}  |  {row[3]}  {row[4]}  {row[5]}  |  {row[6]}  {row[7]}  {row[8]}"

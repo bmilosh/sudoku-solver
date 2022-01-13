@@ -11,13 +11,14 @@ Type '0' for 'Easy', '1' for 'Medium' or '2' for 'Hard':"""
 REMIND_PLAYER_OF_LEVEL_OPTIONS = """
 You should type '0' for 'Easy', '1' for 'Medium' or '2' for 'Hard':"""
 
+# Currently not in use.
 CHOOSE_CELL_MESSAGE2 = """
 Please, enter a cell followed by the equals sign and a value (e.g. 'a5 = 8') and press 'enter':
 Empty cells are shown with an '*'.
 Rows are labelled downward from 'a' to 'i' and columns are labelled rightward from 1 to 9"""
 
 CHOOSE_CELL_MESSAGE = """
-You can restart with a fresh game by typing 'r'.
+You can type 'r' to restart with a fresh game.
 Please, enter a cell followed by the equals sign and a value (e.g. 'a5 = 8') and press 'enter':"""
 
 ROW_AND_COLUMN_ID_MESSAGE = """
@@ -36,7 +37,7 @@ NOT_LEGAL_VALUE = """
  is not a legal value for this cell. Please, enter a legal value or choose another cell:"""
 
 KEYBOARD_INTERRUPT_MESSAGE = """
-You have chosen to end the game."""
+YOU HAVE CHOSEN TO END THE GAME."""
 
 
 class PlaySudoku(SudokuSolver):
@@ -44,14 +45,15 @@ class PlaySudoku(SudokuSolver):
         self.levels = {'0': 'Easy',
                        '1': 'Medium',
                        '2': 'Hard'}
+
         # self.clues has the sense of ['Easy','Medium','Hard']
         # We randomly decide how many clues the game instance
         # will have, depending on the difficulty level. The
         # fewer the clues, the higher the difficulty level.
         # This is not true in general, but nevertheless,
         # that's the principle we use here.
-        self.clues = [randint(78, 80), randint(
-            30, 35), randint(23, 29)]  # randint(36, 42) randint(74, 78)
+        self.clues = [randint(36, 42), randint(
+            30, 35), randint(23, 29)]  # randint(74, 78) this is just for testing purposes
 
         self.puzzle = None
         self.indices = None
@@ -89,7 +91,16 @@ class PlaySudoku(SudokuSolver):
         self.empty_cells = []
 
     def generateSudoku(self) -> list[list]:
-        return self.puzzle
+        """
+        This function is actually not used anywhere here.
+        But it can be called from outside for anyone who
+        just wishes to generate a sudoku without
+        playing the game.
+        It calls the printSudoku function to print the sudoku.
+        Returns nothing.
+        """
+        self.printSudoku(True)
+        # return self.puzzle
 
     def _set_board(self):
         """
@@ -145,7 +156,7 @@ class PlaySudoku(SudokuSolver):
                 print("Exiting...")
                 quit()
             else:
-                print(f"Your chosen level: {game_level}.")
+                print(f"Your chosen level: {game_level.capitalize()}.")
                 break
         return level_id
 
@@ -255,7 +266,8 @@ class PlaySudoku(SudokuSolver):
                 cell = cell.strip()
                 row = self.row_ids.index(cell[0].lower())
             except (ValueError, IndexError):
-                print("Please, enter a valid cell and value.")
+                print()
+                print("Please, enter a valid cell and value:")
             except KeyboardInterrupt:
                 # Fine! You don't want to play.
                 # We'll go get someone else to play.
@@ -268,16 +280,17 @@ class PlaySudoku(SudokuSolver):
                 # But we won't be taking any chances. We'll vet your response
                 # thoroughly.
                 try:
+                    val_length = len(value.strip())
                     value = int(value.strip())
                     col = int(cell[1:])
                 except (ValueError, IndexError):
                     # We don't know what you typed here, but whatever it is,
                     # it's not what we want. Behave.
                     print(COLUMN_OR_VALUE_OUT_OF_RANGE)
-                    print(CHOOSE_CELL_MESSAGE)
+                    # print(CHOOSE_CELL_MESSAGE)
 
                 else:
-                    if value not in range(1, 10) or len(cell) != 2 or col not in range(1, 10):
+                    if val_length != 1 or value not in range(1, 10) or len(cell) != 2 or col not in range(1, 10):
                         # Excuse you?! You know you have to enter values in range(1, 10), right?
                         # Also, your cells should be something like 'e4', not whatever it is
                         # you actually typed. -_-
@@ -306,7 +319,7 @@ class PlaySudoku(SudokuSolver):
                         else:
                             # It all checks out. You may proceed.
                             # Eyes on you still, though. o_o
-                            return row, col, value, response, cell
+                            return row, col, value, response, cell.lower()
 
     def playGame(self):
         """
@@ -321,37 +334,66 @@ class PlaySudoku(SudokuSolver):
         show_board = True
         start = time.perf_counter()
         while True:
-            print(self.moves_stack)
             if not self.indices:
-                # There are no more empty cells. Hurray! But wait.
-                # Have you really solved the puzzle? Let's find out.
-                is_complete = self._check_valid_sudoku()
-                if is_complete:
-                    # It appears you really did solve the puzzle. :)
-                    # Good for you. Congratulations are in order.
-                    # Let's show you how much time you spent.
-                    end = time.perf_counter()
-                    self.printSudoku(True)
-                    print()
-                    print("Congratulations! Sudoku solved!")
-                    time_in_seconds = str(round(end - start, 2))
-                    split_time = time_in_seconds.split('.')
-                    if (m := int(split_time[0])) < 60:
-                        print(
-                            f"Time spent on this sudoku: {'.'.join(split_time)}s")
-                    else:
-                        print(
-                            f"Time spent on this sudoku: {round(m / 60, 2)} minutes")
-
-                    # Can we interest you in another game? Yes, of course. ;)
-                    self.restartGame()
+                # There are no more empty cells to fill. This can only
+                # mean one thing... You've successfully solved the
+                # sudoku! Congratulations! Now we'll rejoice with you
+                # and also show you how long it took you to solve it,
+                # maybe you'll want to use it to brag to your friends.
+                end = time.perf_counter()
+                self.printSudoku(True)
+                print()
+                print("Congratulations! Sudoku solved!")
+                time_in_seconds = str(round(end - start, 2))
+                split_time = time_in_seconds.split('.')
+                if (m := int(split_time[0])) < 60:
+                    print(
+                        f"Time spent on this sudoku: {'.'.join(split_time)}s.")
                 else:
-                    # I'm not sure what to do in this case.
-                    # Ideally, you should go back and undo 
-                    # some moves. But I'm not sure the best
-                    # way to go about it. So for now, we'll
-                    # just restart.
-                    self.restartGame()
+                    print(
+                        f"Time spent on this sudoku: {round(m / 60, 2)} minutes.")
+
+                # Can we interest you in another game? Yes, of course. ;)
+                self.restartGame()
+
+                # # With the current setup of the game's logic, the
+                # # following check is unnecessary. A player can never
+                # # get to a situation where they have repeated numbers
+                # # in any block cos we prevent that with the validity
+                # # checks we do on their input.
+                # # However, I'll just comment this block out rather
+                # # than outrightly deleting it. Just in case we
+                # # change the logic later.
+                # #
+                # # There are no more empty cells. Hurray! But wait.
+                # # Have you really solved the puzzle? Let's find out.
+                # is_complete = self._check_valid_sudoku()
+                # if is_complete:
+                #     # It appears you really did solve the puzzle. :)
+                #     # Good for you. Congratulations are in order.
+                #     # Let's show you how much time you spent.
+                #     end = time.perf_counter()
+                #     self.printSudoku(True)
+                #     print()
+                #     print("Congratulations! Sudoku solved!")
+                #     time_in_seconds = str(round(end - start, 2))
+                #     split_time = time_in_seconds.split('.')
+                #     if (m := int(split_time[0])) < 60:
+                #         print(
+                #             f"Time spent on this sudoku: {'.'.join(split_time)}s")
+                #     else:
+                #         print(
+                #             f"Time spent on this sudoku: {round(m / 60, 2)} minutes")
+
+                #     # Can we interest you in another game? Yes, of course. ;)
+                #     self.restartGame()
+                # else:
+                #     # I'm not sure what to do in this case.
+                #     # Ideally, you should go back and undo
+                #     # some moves. But I'm not sure the best
+                #     # way to go about it. So for now, we'll
+                #     # just restart.
+                #     self.restartGame()
 
             if show_board:
                 self._print_sudoku([['*' if num == 0 else num for num in row]
@@ -359,7 +401,7 @@ class PlaySudoku(SudokuSolver):
 
             if not last_move_legal:
                 print()
-                print("Your previous move was undone.")
+                print("YOUR PREVIOUS MOVE WAS UNDONE.")
             try:
                 response = self._player_move()
                 # Can we unpack your response? Into how many pieces?
@@ -385,7 +427,8 @@ class PlaySudoku(SudokuSolver):
                     # How many moves can you undo?
                     last_move_legal = True
                     show_board = False
-                    print("You have no moves to undo.")
+                    print()
+                    print("YOU HAVE NO MOVES TO UNDO.")
                     continue
                 last_move_legal = False
                 show_board = True
@@ -405,6 +448,7 @@ class PlaySudoku(SudokuSolver):
         Called when the player types 'r' to restart a game.
         Just used to ensure the key press was intended.
         """
+        print()
         print("Are you sure you want to restart with a fresh game?")
         print("You will lose all progress on this one if you do so.")
         print("Type 'yes' to confirm or press 'enter' to continue current game: ")
@@ -421,7 +465,7 @@ class PlaySudoku(SudokuSolver):
                     print("Returning to current game.")
                     return False
                 elif confirm.strip().lower() == 'yes':
-                    print("Restarting with another game...")
+                    print("RESTARTING WITH ANOTHER GAME...")
                     return True
                 else:
                     print(
@@ -431,3 +475,6 @@ class PlaySudoku(SudokuSolver):
 if __name__ == '__main__':
     we_play = PlaySudoku()
     we_play.playGame()
+
+    # If you just want to generate a board.
+    # we_play.generateSudoku()

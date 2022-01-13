@@ -218,14 +218,20 @@ class PlaySudoku(SudokuSolver):
         self.playGame()
 
     def _player_move(self):
-        # print(CHOOSE_CELL_MESSAGE)
-        # # print(ROW_AND_COLUMN_ID_MESSAGE)
-        # if self.moves_stack:
-        #     print("You can type 'u' to undo your last move.")
+        """
+        Used to preprocess the player's input before passing it to
+        playGame. All manner of checks are done on the input.
+        It persists until the player get's it right, restarts, or
+        quits.
+
+        Called by playGame.
+        """
         if self.empty_cells:
-            # print()
+            # As long as there are empty cells, we'll display them.
             print(ROW_AND_COLUMN_ID_MESSAGE)
             print("The current empty cells are:")
+
+            # We don't want to display more than 15 per line.
             i = 15
             empty_cells = self.empty_cells[:i]
             while empty_cells:
@@ -236,57 +242,89 @@ class PlaySudoku(SudokuSolver):
             print("You can type 'u' to undo your last move.")
         print(CHOOSE_CELL_MESSAGE.strip())
         while True:
+            # As long as you're with us, we'll be on
+            # your neck till you get it right.
+            # Let's do this.
             try:
                 response = input().strip()
-                if response.lower() in ['u','r']: # == 'u':
-                    return response.lower() # False
+                if response.lower() in ['u','r']: 
+                    return response.lower() 
                 cell, value = response.split('=')
                 cell = cell.strip()
                 row = self.row_ids.index(cell[0].lower())
             except (ValueError, IndexError):
                 print("Please, enter a valid cell and value.")
             except KeyboardInterrupt:
+                # Fine! You don't want to play. 
+                # We'll go get someone else to play.
                 print(KEYBOARD_INTERRUPT_MESSAGE)
                 print("Exiting...")
                 quit()
             else:
+                # Seems you typed something that looks like what we asked for.
+                # But we won't be taking any chances. We'll vet your response
+                # thoroughly.
                 try:
                     value = int(value.strip())
                     col = int(cell[1:])
                 except (ValueError, IndexError):
+                    # We don't know what you typed here, but whatever it is,
+                    # it's not what we want. Behave.
                     print(COLUMN_OR_VALUE_OUT_OF_RANGE)
                     print(CHOOSE_CELL_MESSAGE)
                 else:
                     if value not in range(1, 10) or len(cell) != 2 or col not in range(1, 10):
+                        # Excuse you?! You know you have to enter values in range(1, 10), right?
+                        # Also, your cells should be something like 'e4', not whatever it is
+                        # you actually typed. -_-
                         print(COLUMN_OR_VALUE_OUT_OF_RANGE)
                     else:
                         col = col - 1
                         if self.puzzle[row][col] != 0:
+                            # Hey! That spot's taken!
+                            # Go find your own! -_-
                             print(SPOT_TAKEN_MESSAGE)
                             continue
+                        # Yep, we need to check if your move is legal.
+                        # Don't want you conning us or something. -_-
                         has_legal_moves, is_legal = self._check_legal_moves(
                             row, col, value)
 
                         if not has_legal_moves:
+                            # Aha! You actually have no legal moves for this cell.
+                            # Glad we caught that.
                             print(NO_LEGAL_MOVES)
                             return False
                         elif not is_legal:
+                            # Even worse (or maybe not)! You chose an illegal value.
                             print(str(value) + ' ' + NOT_LEGAL_VALUE.strip())
                         else:
+                            # It all checks out. You may proceed.
+                            # Eyes on you still, though. o_o 
                             return row, col, value, response, cell
 
     def playGame(self):
+        """
+        The outward-facing function that sets things in motion.
+        """
         self._set_board()
 
-        print(len(self.indices))
+        # We only want to print certain messages when it's necessary.
         last_move_legal = True
+
+        # We only want to show the board when it's necessary.
         show_board = True
         start = time.perf_counter()
         while True:
             print(self.moves_stack)
             if not self.indices:
+                # There are no more empty cells. Hurray! But wait. 
+                # Have you really solved the puzzle? Let's find out.
                 is_complete = self._check_valid_sudoku()
                 if is_complete:
+                    # It appears you really did solve the puzzle. :)
+                    # Good for you. Congratulations are in order.
+                    # Let's show you how much time you spent.
                     end = time.perf_counter()
                     self.printSudoku(True)
                     print()
@@ -297,6 +335,8 @@ class PlaySudoku(SudokuSolver):
                         print(f"Time spent on this sudoku: {'.'.join(split_time)}s")
                     else:
                         print(f"Time spent on this sudoku: {round(m / 60, 2)} minutes")
+                    
+                    # Can we interest you in another game? Yes, of course. ;)
                     self.restartGame()
                     # exit()
             if show_board:
@@ -307,14 +347,27 @@ class PlaySudoku(SudokuSolver):
                 print("Your previous move was undone.")
             try:
                 response = self._player_move()
-                row, col, value, move, cell = response # self._player_move()
+                # Can we unpack your response? Into how many pieces?
+                row, col, value, move, cell = response
             except (TypeError, ValueError):
+                # It appears we can't.
                 if response.lower() == 'r':
                     if self._confirm_restart():
+                        # We need to confirm you really did
+                        # intend to press 'r' -_-
                         self.restartGame()
                     else:
+                        # Turns out it was a mistake. Phew!
+                        # Glad we checked aren't you? 
                         continue
                 if not self.moves_stack:
+                    # You either chose to undo your last move by 
+                    # pressing 'u' or we decided to do it for you
+                    # since you actually have no legal moves for
+                    # the cell you chose.
+
+                    # In any case, the question to ask is this:
+                    # How many moves can you undo?
                     last_move_legal = True
                     show_board = False
                     print("You have no moves to undo.")
@@ -322,7 +375,9 @@ class PlaySudoku(SudokuSolver):
                 last_move_legal = False
                 show_board = True
                 self._undo_last_move()
+
             else:
+                # Let's implement and log your move...
                 last_move_legal = True
                 show_board = True
                 self.moves_stack.append(move)
@@ -331,6 +386,10 @@ class PlaySudoku(SudokuSolver):
                 self.empty_cells.remove(cell)
 
     def _confirm_restart(self):
+        """
+        Called when the player types 'r' to restart a game.
+        Just used to ensure the key press was intended.
+        """
         print("Are you sure you want to restart with a fresh game?")
         print("You will lose all progress on this one if you do so.")
         print("Type 'yes' to confirm or press 'enter' to continue current game: ")
@@ -343,7 +402,7 @@ class PlaySudoku(SudokuSolver):
                 quit()
             else:
                 if not confirm:
-                    # Catches the 'enter' key press
+                    # Catches the 'enter' key press.
                     print("Returning to current game.")
                     return False
                 elif confirm.strip().lower() == 'yes':

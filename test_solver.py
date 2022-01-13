@@ -215,19 +215,6 @@ solvable_puzzle3 = (
     (0, 0, 7, 0, 0, 0, 3, 0, 0)
 )
 
-# Valid and solvable.
-solvable_puzzle4 = [
-    [0, 0, 0, 8, 0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 4, 3, 0],
-    [5, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 7, 0, 8, 0, 0],
-    [0, 0, 0, 0, 0, 0, 1, 0, 0],
-    [0, 2, 0, 0, 3, 0, 0, 0, 0],
-    [6, 0, 0, 0, 0, 0, 0, 7, 5],
-    [0, 0, 3, 4, 0, 0, 0, 0, 0],
-    [0, 0, 0, 2, 0, 0, 6, 0, 0]
-]
-
 solution_to_puzzle1 = [
     '496157382',
     '251836947',
@@ -263,24 +250,11 @@ solution_to_puzzle3 = [
     '897261354'
 ]
 
-solution_to_puzzle4 = [
-    '234891567',
-    '169725438',
-    '578346912',
-    '316574829',
-    '497682153',
-    '825139746',
-    '642918375',
-    '953467281',
-    '781253694'
-]
-
 
 @pytest.mark.parametrize("puzzle, expected_answer", [
     (solvable_puzzle1, solution_to_puzzle1),
     (solvable_puzzle2, solution_to_puzzle2),
-    (solvable_puzzle3, solution_to_puzzle3),
-    (solvable_puzzle4, solution_to_puzzle4)
+    (solvable_puzzle3, solution_to_puzzle3)
 ])
 def test_solvable_puzzle(puzzle, expected_answer):
     solution = SudokuSolver(puzzle).solveSudoku()

@@ -1,4 +1,6 @@
 
+from random import shuffle
+import time
 
 PUZZLE_NOT_SOLVABLE = """
 Could not solve puzzle! Please, check that enough clues are given,
@@ -8,7 +10,9 @@ in grids, rows, or columns.
 NOT_ENOUGH_CLUES = """
 You have provided fewer than 17 clues. Note that, while this puzzle
 might still be solvable, the solution may not be unique. To have a
-unique solution, you need to provide at least 17 correct clues.
+unique solution, you need to provide at least 17 correct clues 
+(which unfortunately also doesn't guarantee uniqueness, but is
+necessary).
 """
 
 
@@ -17,11 +21,21 @@ class SudokuSolver:
     A sudoku solver.
     """
 
-    def __init__(self, puzzle: list[list]) -> None:
-        if isinstance(puzzle, tuple):
-            self.puzzle = list(puzzle)
-        else:
-            self.puzzle = puzzle
+    def __init__(self, puzzle=None) -> None:
+        if puzzle:
+            if isinstance(puzzle, tuple):
+                self.puzzle = list(puzzle)
+            else:
+                self.puzzle = puzzle
+        self.row_ids = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
+
+    def printSudoku(self, generate=False):
+        if generate:
+            if self.isValidSudoku():
+                self._print_sudoku(self.puzzle)
+            else:
+                return None
+        return None
 
     def _print_sudoku(self, puzzle: list[list]) -> None:
         """
@@ -29,11 +43,13 @@ class SudokuSolver:
         Called by the solveSudoku function.
         """
         print()
+        print("   1  2  3     4  5  6     7  8  9")
+        print()
         for idx, row in enumerate(puzzle):
             toprint = f" {row[0]}  {row[1]}  {row[2]}  |  {row[3]}  {row[4]}  {row[5]}  |  {row[6]}  {row[7]}  {row[8]}"
-            print(toprint)
+            print(self.row_ids[idx] + ' ' + toprint)
             if idx == 2 or idx == 5:
-                print('-' * len(toprint))
+                print('   ' + '-' * len(toprint))
         return
 
     def isRightType(self, type_tuple: tuple, idx1: int, idx2=None) -> bool:
@@ -58,7 +74,7 @@ class SudokuSolver:
         Returns a boolean indicating whether or not the content is of the
         right type.
         """
-        
+
         desired_type, acceptable_type = type_tuple
         puzzle_item = self.puzzle[idx1] if idx2 is None else self.puzzle[idx1][idx2]
         if not isinstance(puzzle_item, desired_type):
@@ -129,7 +145,7 @@ class SudokuSolver:
         # All checks are fine.
         return True
 
-    def solveSudoku(self):
+    def solveSudoku(self, generate=False):
         """
         Main function.
         Takes as input, a 9 x 9 sudoku represented
@@ -144,6 +160,11 @@ class SudokuSolver:
         In the case where the puzzle was found to be invalid
         due to type inconsistencies, it returns None.
         """
+
+        if generate:
+            self.recursiveSolveSudoku([(i, j) for i in range(9) for j in range(9)
+                                        if self.puzzle[i][j] == 0])
+            return None
 
         # We do a validity check on the puzzle.
         if not self.isValidSudoku():
@@ -223,9 +244,11 @@ class SudokuSolver:
         #   - the row containing this cell, and
         #   - the column containing this cell.
         not_in = [j for j in range(1, 10)
-                  if not j in self.puzzle[row] and
-                  not j in [self.puzzle[k][col] for k in range(9)] and
-                  not j in grid]
+                  if j not in self.puzzle[row] and
+                  j not in [self.puzzle[k][col] for k in range(9)] and
+                  j not in grid]
+        
+        shuffle(not_in)
 
         ind = 0
         while ind < len(not_in):
@@ -260,6 +283,7 @@ class SudokuSolver:
         return False
 
 
+
 if __name__ == '__main__':
     # More example sudokus can be found in test_solver.py
 
@@ -276,7 +300,6 @@ if __name__ == '__main__':
         [0, 0, 0, '3', 0, 2, 4, 0, 0]
     )
 
-    import time
     start = time.perf_counter()
     sudoku = SudokuSolver(solvable_puzzle1)
     solved_sudoku = sudoku.solveSudoku()

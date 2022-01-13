@@ -32,6 +32,6 @@ I tried to make the game as interactive as possible, so you'll find prompts for 
 
 As with any game, once you start, all prompts for user input are persistent. However, you can gracefully exit anytime with a `KeyboardInterrupt` (i.e., by doing `CTRL-C` on Windows and `CMD-C`, I think, on Mac).
 ## To-Do
-&#9745; Add a way to randomly generate sudokus. Currently, the program serves to solve the user's sudoku. It can be extended to also give the user something to solve.
-&#9745; Add a user interface. 
-&#9744; Add a graphical user interface. This will be nice to have, but...
+- [x] Add a way to randomly generate sudokus. Currently, the program serves to solve the user's sudoku. It can be extended to also give the user something to solve.
+- [x] Add a user interface. 
+- [ ] Add a graphical user interface. This will be nice to have, but...

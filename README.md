@@ -1,5 +1,5 @@
 # Sudoku Solver
-A sudoku solver that doubles as a game.
+A sudoku solver that doubles as a game. **GUI for game added!!! To play, run `play_game_gui.py`**
 ## Description
 With this program, you can solve any correctly written `9 x 9` sudoku. Surprisingly (double wink), you can also play a game or two of sudoku with it.
 ## How The Solver Works
@@ -34,4 +34,5 @@ As with any game, once you start, all prompts for user input are persistent. How
 ## To-Do
 - [x] Add a way to randomly generate sudokus. Currently, the program serves to solve the user's sudoku. It can be extended to also give the user something to solve.
 - [x] Add a user interface. 
-- [ ] Add a graphical user interface. This will be nice to have, but...
+- [x] Add a graphical user interface. 
+- [ ] Add a web interface. This will be nice to have, but...

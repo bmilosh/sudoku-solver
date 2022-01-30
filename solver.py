@@ -33,8 +33,9 @@ class SudokuSolver:
         if generate:
             if self.isValidSudoku():
                 self._print_sudoku(self.puzzle)
+                return True
             else:
-                return None
+                return False
         return None
 
     def _print_sudoku(self, puzzle: list[list]) -> None:
@@ -163,7 +164,7 @@ class SudokuSolver:
 
         if generate:
             self.recursiveSolveSudoku([(i, j) for i in range(9) for j in range(9)
-                                        if self.puzzle[i][j] == 0])
+                                       if self.puzzle[i][j] == 0])
             return None
 
         # We do a validity check on the puzzle.
@@ -247,7 +248,7 @@ class SudokuSolver:
                   if j not in self.puzzle[row] and
                   j not in [self.puzzle[k][col] for k in range(9)] and
                   j not in grid]
-        
+
         shuffle(not_in)
 
         ind = 0
@@ -281,33 +282,3 @@ class SudokuSolver:
 
         # We couldn't find a value that works.
         return False
-
-
-
-if __name__ == '__main__':
-    # More example sudokus can be found in test_solver.py
-
-    # Valid and solvable.
-    solvable_puzzle1 = (
-        (0, 0, 6, '0', 0, 7, 3, 0, 0),
-        [0, 0, 1, 0, 0, 0, 0, 4, 0],
-        [0, 0, 0, 4, 2, 0, 0, 5, 0],
-        [0, 7, 0, 9, 0, 5, 0, 0, 0],
-        [0, 2, 5, 6, 0, 0, 0, 0, 0],
-        [9, 0, 0, 0, 0, 0, 8, 0, 0],
-        [0, 8, 0, 0, 0, 4, 0, 3, 0],
-        [7, 0, 0, 0, 9, 0, 0, 6, 0],
-        [0, 0, 0, '3', 0, 2, 4, 0, 0]
-    )
-
-    start = time.perf_counter()
-    sudoku = SudokuSolver(solvable_puzzle1)
-    solved_sudoku = sudoku.solveSudoku()
-    end = time.perf_counter()
-
-    if solved_sudoku:
-        print()
-        print(f"It took {round(end - start, 3)}s to solve this puzzle.")
-    elif solved_sudoku == False:
-        print(
-            f"It took {round(end - start, 3)}s to determine there's no solution for this puzzle.")

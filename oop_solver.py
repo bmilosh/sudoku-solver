@@ -14,7 +14,6 @@ unique solution, you need to provide at least 17 correct clues
 (which unfortunately also doesn't guarantee uniqueness, but is
 necessary).
 """
-ROW_IDS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
 
 
 class SudokuValidator:
@@ -24,11 +23,11 @@ class SudokuValidator:
                 self.puzzle = list(puzzle)
             else:
                 self.puzzle = puzzle
-            self.isValid = self.isValidSudoku()
+            self.isValid = self.__isValidSudoku()
         else:
             self.isValid = False
 
-    def isRightType(self, type_tuple: tuple, idx1: int, idx2=None) -> bool:
+    def __isRightType(self, type_tuple: tuple, idx1: int, idx2=None) -> bool:
         """
         Helper function to check if contents of the puzzle are of the
         right type and length:
@@ -37,7 +36,7 @@ class SudokuValidator:
             - cells can be either strings or integers in range(10).
                 - if they are strings and numeric, we convert to integers.
 
-        Called by the isValidSudoku function.
+        Called by the __isValidSudoku function.
 
         Takes as input:
             - type_tuple -> a tuple of length 2 where the first element is
@@ -76,7 +75,7 @@ class SudokuValidator:
         # Ensure cell entries are in range(10).
         return 0 <= self.puzzle[idx1][idx2] <= 9
 
-    def isValidSudoku(self) -> bool:
+    def __isValidSudoku(self) -> bool:
         """
         Helper function to check if the given
         puzzle is 'valid'. Called by the
@@ -106,14 +105,14 @@ class SudokuValidator:
 
         for row_index in range(9):
             # We permit tuples or strings instead of lists for the rows.
-            if not self.isRightType((list, (tuple, str)), row_index):
+            if not self.__isRightType((list, (tuple, str)), row_index):
                 print(
                     "Not a valid 9 X 9 sudoku. Rows should be only lists, tuples or strings of length 9.")
                 return False
 
             for entry_index in range(9):
                 # We also permit ints masked as strs for the cell entries.
-                if not self.isRightType((int, str), row_index, entry_index):
+                if not self.__isRightType((int, str), row_index, entry_index):
                     print(
                         "Not a valid 9 X 9 sudoku. All cell entries should be numerics in range(10).")
                     return False
@@ -129,6 +128,7 @@ class SudokuSolver:
 
     def __init__(self, puzzle=None) -> None:
         self.puzzle = puzzle
+        # self.validator = None
         # self.row_ids = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
 
     def solveSudoku(self, generate=False):
@@ -153,12 +153,12 @@ class SudokuSolver:
             return None
 
         # We do a validity check on the puzzle.
-        validator = SudokuValidator(self.puzzle)
-        if not validator.isValid:
+        self.validator = SudokuValidator(self.puzzle)
+        if not self.validator.isValid:
             # The puzzle is not valid. The appropriate message
             # has been printed. We quit the program here.
             return None
-        self.puzzle = validator.puzzle
+        self.puzzle = self.validator.puzzle
 
         # We use the _print_sudoku function to print
         # our puzzle with one modification: We set empty
@@ -177,7 +177,7 @@ class SudokuSolver:
         if not allzeros:
             print("Puzzle has no zero entry.")
             return None
-        
+
         # To be guaranteed a unique solution, the sudoku should have
         # at least 17 clues correctly placed (or put another way, it
         # should have at most 64 empty cells). If this is not the case
@@ -235,7 +235,7 @@ class SudokuSolver:
                   if j not in self.puzzle[row] and
                   j not in [self.puzzle[k][col] for k in range(9)] and
                   j not in grid]
-        
+
         shuffle(not_in)
 
         ind = 0
@@ -272,17 +272,20 @@ class SudokuSolver:
 
 
 class SudokuPrinter:
+    ROW_IDS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
+
     def __init__(self) -> None:
         self.puzzle = None
 
     def printSudoku(self, puzzle, replace_zeroes=False):
-        validator = SudokuValidator(puzzle)
-        if not validator.isValid:
+        self.validator = SudokuValidator(puzzle)
+        if not self.validator.isValid:
             print("Cannot print sudoku. Sudoku not of right type.")
         else:
             if replace_zeroes:
                 puzzle = [['*' if num == 0 else num for num in row]
-                           for row in puzzle]
+                          for row in puzzle]
+                self.test_replace_zeroes_puzzle = puzzle
             self.__print_sudoku(puzzle)
         return None
 
@@ -296,7 +299,7 @@ class SudokuPrinter:
         print()
         for idx, row in enumerate(puzzle):
             toprint = f" {row[0]}  {row[1]}  {row[2]}  |  {row[3]}  {row[4]}  {row[5]}  |  {row[6]}  {row[7]}  {row[8]}"
-            print(ROW_IDS[idx] + ' ' + toprint)
+            print(self.ROW_IDS[idx] + ' ' + toprint)
             if idx == 2 or idx == 5:
                 print('   ' + '-' * len(toprint))
         return
@@ -311,41 +314,3 @@ class SudokuGenerator:
         solver = SudokuSolver(self.puzzle)
         solver.solveSudoku(generate=True)
         return self.puzzle
-
-
-
-if __name__ == '__main__':
-    # More example sudokus can be found in test_solver.py
-
-    # Valid and solvable.
-    solvable_puzzle1 = (
-        (0, 0, 6, '0', 0, 7, 3, 0, 0),
-        [0, 0, 1, 0, 0, 0, 0, 4, 0],
-        [0, 0, 0, 4, 2, 0, 0, 5, 0],
-        [0, 7, 0, 9, 0, 5, 0, 0, 0],
-        [0, 2, 5, 6, 0, 0, 0, 0, 0],
-        [9, 0, 0, 0, 0, 0, 8, 0, 0],
-        [0, 8, 0, 0, 0, 4, 0, 3, 0],
-        [7, 0, 0, 0, 9, 0, 0, 6, 0],
-        [0, 0, 0, '3', 0, 2, 4, 0, 0]
-    )
-
-
-    sudoku = SudokuSolver(solvable_puzzle1)
-    SudokuPrinter().printSudoku(sudoku.puzzle, True)
-    # printer.__print_sudoku(sudoku.puzzle)
-    start = time.perf_counter()
-    solved_sudoku = sudoku.solveSudoku()
-    end = time.perf_counter()
-
-    if solved_sudoku:
-        SudokuPrinter().printSudoku(sudoku.puzzle)
-        print()
-        print(f"It took {round(end - start, 3)}s to solve this puzzle.")
-    elif solved_sudoku == False:
-        print(
-            f"It took {round(end - start, 3)}s to determine there's no solution for this puzzle.")
-
-    # gen = SudokuGenerator()
-    # gen.generateSudoku()
-    # SudokuPrinter().printSudoku(gen.puzzle)

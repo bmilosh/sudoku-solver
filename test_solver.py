@@ -69,13 +69,41 @@ invalid_puzzle5 = (
     '123456789'
 )
 
+# Invalid puzzle: contains fewer than 9 rows.
+invalid_puzzle6 = [
+    (1, 2, 3, 4, 5, 6, 7, 8, 9),
+    (1, 2, 3, 4, 5, 6, 7, 8, 2),
+    (1, 2, 3, 4, 5, 6, 7, 2, 9),
+    (1, 2, 3, 4, 5, 6, 2, 8, 9),
+    (1, 2, 3, 4, 5, 2, 7, 8, 9),
+    (1, 2, 3, 4, 2, 6, 7, 8, 9),
+    (1, 2, 3, 2, 5, 6, 7, 8, 9),
+    (1, 2, 3, 4, 5, 6, 7, 8, 9)
+]
+
+# Invalid puzzle: contains more than 9 rows.
+invalid_puzzle7 = [
+    (1, 2, 3, 4, 5, 6, 7, 8, 9),
+    (1, 2, 3, 4, 5, 6, 7, 8, 2),
+    (1, 2, 3, 4, 5, 6, 7, 2, 9),
+    (1, 2, 3, 4, 5, 6, 2, 8, 9),
+    (1, 2, 3, 4, 5, 2, 7, 8, 9),
+    (1, 2, 3, 4, 2, 6, 7, 8, 9),
+    (1, 2, 3, 4, 2, 6, 7, 8, 9),
+    (1, 2, 3, 4, 2, 6, 7, 8, 9),
+    (1, 2, 3, 2, 5, 6, 7, 8, 9),
+    (1, 2, 3, 4, 5, 6, 7, 8, 9)
+]
+
 
 @pytest.mark.parametrize("puzzle", [
     invalid_puzzle1,
     invalid_puzzle2,
     invalid_puzzle3,
     invalid_puzzle4,
-    invalid_puzzle5
+    invalid_puzzle5,
+    invalid_puzzle6,
+    invalid_puzzle7
 ])
 def test_invalid_puzzle(puzzle):
     assert SudokuSolver(puzzle).solveSudoku() is None
@@ -114,6 +142,60 @@ no_zero_entry2 = (
 ])
 def test_no_zero_entry(puzzle):
     assert SudokuSolver(puzzle).solveSudoku() is None
+
+
+generate_puzzle = [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 7, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0]
+]
+
+
+def test_generate_puzzle():
+    assert SudokuSolver(generate_puzzle).solveSudoku(True) is None
+
+
+print_puzzle1 = [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 7, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0]
+]
+
+
+def test_print_sudoku_generate_true_with_valid_sudoku():
+    assert SudokuSolver(print_puzzle1).printSudoku(True)
+
+
+print_puzzle2 = [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 7, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0]
+]
+
+
+def test_print_sudoku_generate_true_with_invalid_sudoku():
+    assert not SudokuSolver(print_puzzle2).printSudoku(True)
+
+
+def test_print_sudoku_generate_false():
+    assert SudokuSolver(print_puzzle1).printSudoku() is None
 
 
 # Valid in terms of types, but not solvable because

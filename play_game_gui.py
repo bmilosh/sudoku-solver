@@ -92,12 +92,12 @@ class SudokuGame(SudokuSolver):
             self.stop_timer(self.timer_running)
             self.seconds_counter = 0
         self.tick()
-        solved = self.solveSudoku()
+        self.solveSudoku()
 
         # This doesn't yet work as intended.
         self.stop_timer(self.timer_running)
 
-    def _get_legal_values(self, row: int, col: int) -> bool:
+    def _get_legal_values(self, row: int, col: int) -> list:
         grid = [self.puzzle[row - row % 3 + i][col - col % 3 + j]
                 for i in range(3)
                 for j in range(3)]
